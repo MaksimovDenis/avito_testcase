@@ -83,8 +83,9 @@ func (u UpdateBanner) Validate() error {
 }
 
 type BannerQueryParams struct {
-	TagID     int
-	FeatureID int
-	Limit     int
-	Offset    int
+	TagID       int
+	FeatureID   int
+	Limit       int
+	Offset      int
+	LastVersion bool
 }

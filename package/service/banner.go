@@ -21,12 +21,12 @@ func (b *BannerService) CreateBanner(banner avito.Banners, tagIDs []int) (int, e
 	return b.repo.CreateBanner(banner, tagIDs)
 }
 
-func (b *BannerService) GetBannerByTagAndFeature(tagID int, featureID int, lastVersion bool) (avito.Banners, error) {
-	return b.repo.GetBannerByTagAndFeature(tagID, featureID, lastVersion)
+func (b *BannerService) GetBannerByTagAndFeature(params avito.BannerQueryParams) (avito.Banners, error) {
+	return b.repo.GetBannerByTagAndFeature(params)
 }
 
-func (b *BannerService) GetBannerByTagAndFeatureForAdmin(tagID int, featureID int, lastVersion bool) (avito.Banners, error) {
-	return b.repo.GetBannerByTagAndFeatureForAdmin(tagID, featureID, lastVersion)
+func (b *BannerService) GetBannerByTagAndFeatureForAdmin(params avito.BannerQueryParams) (avito.Banners, error) {
+	return b.repo.GetBannerByTagAndFeatureForAdmin(params)
 }
 
 func (b *BannerService) GetAllBanners(params avito.BannerQueryParams) ([]avito.AllBanners, error) {

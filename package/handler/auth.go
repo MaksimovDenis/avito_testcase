@@ -7,6 +7,17 @@ import (
 	"net/http"
 )
 
+// @Summary SingUp
+// @Description  Create account
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body avito.User true "Account info"
+// @Success 200 {integer} integer 1
+// @Failure 400 {object} Err
+// @Failure 404 {object} Err
+// @Failure 500 {object} Err
+// @Router       /auth/sing-up [post]
 func (h *Handler) handleSingUp(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Info("Handling Sign Up")
 
@@ -49,6 +60,17 @@ type logInInput struct {
 	Password string `json:"password"`
 }
 
+// @Summary LogIn
+// @Description  LogIn
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body logInInput true "credentials"
+// @Success 200 {string} string "token"
+// @Failure 400 {object} Err
+// @Failure 404 {object} Err
+// @Failure 500 {object} Err
+// @Router       /auth/log-in [post]
 func (h *Handler) handleSingIn(w http.ResponseWriter, r *http.Request) {
 
 	logger.Log.Info("Handling Log In")

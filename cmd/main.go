@@ -18,6 +18,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// @title Сервис баннеров
+// @verstion 1.0.0
+
+// @host localhost:8000
+// @BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+
+// @contact.name Denis Maksimov
+// @contact.email maksimovis74@gmail.com
+
 type Config struct {
 	Port string `yaml:"port"`
 	DB   struct {

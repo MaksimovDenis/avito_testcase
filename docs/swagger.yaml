@@ -1,0 +1,415 @@
+basePath: /
+definitions:
+  avito.UpdateBanner:
+    properties:
+      banner_id:
+        type: integer
+      content:
+        properties:
+          text:
+            type: string
+          title:
+            type: string
+          url:
+            type: string
+        type: object
+      feature_id:
+        type: integer
+      is_active:
+        type: boolean
+      tag_ids:
+        items:
+          type: integer
+        type: array
+      updated_at:
+        type: string
+    type: object
+  avito.User:
+    properties:
+      is_admin:
+        type: boolean
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  handler.Err:
+    properties:
+      message:
+        type: string
+    type: object
+  handler.StatusResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  handler.bannerRequest:
+    properties:
+      content:
+        properties:
+          text:
+            type: string
+          title:
+            type: string
+          url:
+            type: string
+        type: object
+      feature_id:
+        type: integer
+      is_active:
+        type: boolean
+      tag_ids:
+        items:
+          type: integer
+        type: array
+    type: object
+  handler.getAllBannersResponse:
+    properties:
+      banner_id:
+        type: integer
+      content:
+        properties:
+          text:
+            type: string
+          title:
+            type: string
+          url:
+            type: string
+        type: object
+      created_at:
+        type: string
+      feature_id:
+        type: integer
+      is_active:
+        type: boolean
+      tag_ids:
+        items:
+          type: integer
+        type: array
+      updated_at:
+        type: string
+    type: object
+  handler.getBannerByTagAndFeatureResponse:
+    properties:
+      text:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  handler.logInInput:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8000
+info:
+  contact:
+    email: maksimovis74@gmail.com
+    name: Denis Maksimov
+  title: Сервис баннеров
+paths:
+  /auth/log-in:
+    post:
+      consumes:
+      - application/json
+      description: LogIn
+      parameters:
+      - description: credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.logInInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Err'
+      summary: LogIn
+      tags:
+      - auth
+  /auth/sing-up:
+    post:
+      consumes:
+      - application/json
+      description: Create account
+      parameters:
+      - description: Account info
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/avito.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Err'
+      summary: SingUp
+      tags:
+      - auth
+  /banner:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: feature_id
+        in: query
+        name: feature_id
+        type: integer
+      - description: tag_id
+        in: query
+        name: tag_id
+        type: integer
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.getAllBannersResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Err'
+      security:
+      - ApiKeyAuth: []
+      summary: Получение всех баннеров c фильтрацией по фиче и/или тегу
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Содержимое баннера
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.bannerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: id
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Err'
+      security:
+      - ApiKeyAuth: []
+      summary: Создание нового баннера
+  /banner/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/handler.StatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Err'
+      security:
+      - ApiKeyAuth: []
+      summary: Удаление баннера по идентификатору
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: id
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Содержимое баннера
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/avito.UpdateBanner'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/handler.StatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Err'
+      security:
+      - ApiKeyAuth: []
+      summary: Обновление содержимого баннера
+  /user_banner:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: tag_id
+        in: query
+        name: tag_id
+        required: true
+        type: integer
+      - description: feature_id
+        in: query
+        name: feature_id
+        required: true
+        type: integer
+      - description: 'use_last_revision: false'
+        in: query
+        name: use_last_revision
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.getBannerByTagAndFeatureResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Err'
+      security:
+      - ApiKeyAuth: []
+      summary: Получение баннера для пользователя
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

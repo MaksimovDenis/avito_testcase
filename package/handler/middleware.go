@@ -44,7 +44,7 @@ func (h *Handler) userIdentity(next http.HandlerFunc) http.HandlerFunc {
 
 		userId, err := h.service.Authorization.ParseToken(token)
 		if err != nil {
-			NewErrorResponse(w, http.StatusUnauthorized, err.Error())
+			NewErrorResponse(w, http.StatusUnauthorized, "Пользователь не авторизован")
 			return
 		}
 

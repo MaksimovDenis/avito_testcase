@@ -3,6 +3,10 @@ package handler
 import (
 	"avito_testcase/package/service"
 	"net/http"
+
+	_ "avito_testcase/docs"
+
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 type Handler struct {
@@ -15,6 +19,8 @@ func NewHandler(service *service.Service) *Handler {
 
 func (h *Handler) InitRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
+
+	mux.Handle("/swagger/", httpSwagger.Handler())
 
 	auth := "/auth"
 
@@ -36,20 +42,9 @@ func (h *Handler) InitRoutes() *http.ServeMux {
 		}
 	})
 
-	//POST
-	//.../banner/{bannerID}
-	mux.HandleFunc("/banner", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			h.userIdentity(h.handleCreateBanner)(w, r)
-			return
-		} else {
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
 	//GET
-	//.../user_banner/{tagID}/{featureID}/{lastVersion}
-	mux.HandleFunc("/user_banner/", func(w http.ResponseWriter, r *http.Request) {
+	//.../user_banner
+	mux.HandleFunc("/user_banner", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			h.userIdentity(h.handleGetBannerByTagAndFeature)(w, r)
 			return
@@ -58,14 +53,30 @@ func (h *Handler) InitRoutes() *http.ServeMux {
 		}
 	})
 
-	//GET, PATCH, DELETE
-	//.../banner/{featureID}/{tagID}/{limit}/{offset} - GET
-	//.../banner/{bannerID} - PATCH, DELETE
-	mux.HandleFunc("/banner/", func(w http.ResponseWriter, r *http.Request) {
+	//GET, POST, PATCH, DELETE
+	//.../banner
+	mux.HandleFunc("/banner", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			h.userIdentity(h.handleGetAllBanners)(w, r)
 			return
 		} else if r.Method == http.MethodPatch {
+			h.userIdentity(h.handleUpdateBanner)(w, r)
+			return
+		} else if r.Method == http.MethodPost {
+			h.userIdentity(h.handleCreateBanner)(w, r)
+			return
+		} else if r.Method == http.MethodDelete {
+			h.userIdentity(h.handleDeleteBanner)(w, r)
+			return
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	//PATCH, DELETE
+	//.../banner/{id}
+	mux.HandleFunc("/banner/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPatch {
 			h.userIdentity(h.handleUpdateBanner)(w, r)
 			return
 		} else if r.Method == http.MethodDelete {

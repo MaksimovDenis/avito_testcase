@@ -5,7 +5,7 @@
 package mock_service
 
 import (
-	avito_testcase "avito_testcase"
+	avito "avito_testcase"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -35,7 +35,7 @@ func (m *MockAuthorization) EXPECT() *MockAuthorizationMockRecorder {
 }
 
 // CreateUser mocks base method.
-func (m *MockAuthorization) CreateUser(user avito_testcase.User) (int, error) {
+func (m *MockAuthorization) CreateUser(user avito.User) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", user)
 	ret0, _ := ret[0].(int)
@@ -118,7 +118,7 @@ func (m *MockBanner) EXPECT() *MockBannerMockRecorder {
 }
 
 // CreateBanner mocks base method.
-func (m *MockBanner) CreateBanner(banner avito_testcase.Banners, tagIDs []int) (int, error) {
+func (m *MockBanner) CreateBanner(banner avito.Banners, tagIDs []int) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateBanner", banner, tagIDs)
 	ret0, _ := ret[0].(int)
@@ -147,67 +147,67 @@ func (mr *MockBannerMockRecorder) DeleteBanner(bannerID interface{}) *gomock.Cal
 }
 
 // GetAllBanners mocks base method.
-func (m *MockBanner) GetAllBanners(featureID, tagID, limit, offset int) ([]avito_testcase.AllBanners, error) {
+func (m *MockBanner) GetAllBanners(params avito.BannerQueryParams) ([]avito.AllBanners, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllBanners", featureID, tagID, limit, offset)
-	ret0, _ := ret[0].([]avito_testcase.AllBanners)
+	ret := m.ctrl.Call(m, "GetAllBanners", params)
+	ret0, _ := ret[0].([]avito.AllBanners)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllBanners indicates an expected call of GetAllBanners.
-func (mr *MockBannerMockRecorder) GetAllBanners(featureID, tagID, limit, offset interface{}) *gomock.Call {
+func (mr *MockBannerMockRecorder) GetAllBanners(params interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBanners", reflect.TypeOf((*MockBanner)(nil).GetAllBanners), featureID, tagID, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBanners", reflect.TypeOf((*MockBanner)(nil).GetAllBanners), params)
 }
 
 // GetAllBannersForAdmin mocks base method.
-func (m *MockBanner) GetAllBannersForAdmin(featureID, tagID, limit, offset int) ([]avito_testcase.AllBanners, error) {
+func (m *MockBanner) GetAllBannersForAdmin(params avito.BannerQueryParams) ([]avito.AllBanners, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllBannersForAdmin", featureID, tagID, limit, offset)
-	ret0, _ := ret[0].([]avito_testcase.AllBanners)
+	ret := m.ctrl.Call(m, "GetAllBannersForAdmin", params)
+	ret0, _ := ret[0].([]avito.AllBanners)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllBannersForAdmin indicates an expected call of GetAllBannersForAdmin.
-func (mr *MockBannerMockRecorder) GetAllBannersForAdmin(featureID, tagID, limit, offset interface{}) *gomock.Call {
+func (mr *MockBannerMockRecorder) GetAllBannersForAdmin(params interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBannersForAdmin", reflect.TypeOf((*MockBanner)(nil).GetAllBannersForAdmin), featureID, tagID, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBannersForAdmin", reflect.TypeOf((*MockBanner)(nil).GetAllBannersForAdmin), params)
 }
 
 // GetBannerByTagAndFeature mocks base method.
-func (m *MockBanner) GetBannerByTagAndFeature(tagID, featureID int, lastVersion bool) (avito_testcase.Banners, error) {
+func (m *MockBanner) GetBannerByTagAndFeature(params avito.BannerQueryParams) (avito.Banners, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBannerByTagAndFeature", tagID, featureID, lastVersion)
-	ret0, _ := ret[0].(avito_testcase.Banners)
+	ret := m.ctrl.Call(m, "GetBannerByTagAndFeature", params)
+	ret0, _ := ret[0].(avito.Banners)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBannerByTagAndFeature indicates an expected call of GetBannerByTagAndFeature.
-func (mr *MockBannerMockRecorder) GetBannerByTagAndFeature(tagID, featureID, lastVersion interface{}) *gomock.Call {
+func (mr *MockBannerMockRecorder) GetBannerByTagAndFeature(params interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBannerByTagAndFeature", reflect.TypeOf((*MockBanner)(nil).GetBannerByTagAndFeature), tagID, featureID, lastVersion)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBannerByTagAndFeature", reflect.TypeOf((*MockBanner)(nil).GetBannerByTagAndFeature), params)
 }
 
 // GetBannerByTagAndFeatureForAdmin mocks base method.
-func (m *MockBanner) GetBannerByTagAndFeatureForAdmin(tagID, featureID int, lastVersion bool) (avito_testcase.Banners, error) {
+func (m *MockBanner) GetBannerByTagAndFeatureForAdmin(params avito.BannerQueryParams) (avito.Banners, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBannerByTagAndFeatureForAdmin", tagID, featureID, lastVersion)
-	ret0, _ := ret[0].(avito_testcase.Banners)
+	ret := m.ctrl.Call(m, "GetBannerByTagAndFeatureForAdmin", params)
+	ret0, _ := ret[0].(avito.Banners)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBannerByTagAndFeatureForAdmin indicates an expected call of GetBannerByTagAndFeatureForAdmin.
-func (mr *MockBannerMockRecorder) GetBannerByTagAndFeatureForAdmin(tagID, featureID, lastVersion interface{}) *gomock.Call {
+func (mr *MockBannerMockRecorder) GetBannerByTagAndFeatureForAdmin(params interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBannerByTagAndFeatureForAdmin", reflect.TypeOf((*MockBanner)(nil).GetBannerByTagAndFeatureForAdmin), tagID, featureID, lastVersion)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBannerByTagAndFeatureForAdmin", reflect.TypeOf((*MockBanner)(nil).GetBannerByTagAndFeatureForAdmin), params)
 }
 
 // UpdateBanner mocks base method.
-func (m *MockBanner) UpdateBanner(bannerID int, input avito_testcase.UpdateBanner) error {
+func (m *MockBanner) UpdateBanner(bannerID int, input avito.UpdateBanner) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateBanner", bannerID, input)
 	ret0, _ := ret[0].(error)

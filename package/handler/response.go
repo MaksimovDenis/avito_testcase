@@ -7,8 +7,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var ErrBadRequest = Err{Message: "Некорректные данные"}
+
+var ErrUnauthorized = Err{Message: "Пользователь не авторизован"}
+
+var ErrForbidden = Err{Message: "Пользователь не имеет доступа"}
+
+var ErrNotFound = Err{Message: "Баннер не найден"}
+
+var ErrInternalServerError = Err{Message: "Внутренняя ошибка сервера"}
+
 type Err struct {
 	Message string `json:"message"`
+}
+
+func (e Err) Error() string {
+	return e.Message
 }
 
 type StatusResponse struct {

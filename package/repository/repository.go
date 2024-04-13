@@ -14,8 +14,8 @@ type Authorization interface {
 
 type Banner interface {
 	CreateBanner(banner avito.Banners, tagIDs []int) (int, error)
-	GetBannerByTagAndFeature(tagID int, featureID int, lastVersion bool) (avito.Banners, error)
-	GetBannerByTagAndFeatureForAdmin(tagID int, featureID int, lastVersion bool) (avito.Banners, error)
+	GetBannerByTagAndFeature(params avito.BannerQueryParams) (avito.Banners, error)
+	GetBannerByTagAndFeatureForAdmin(params avito.BannerQueryParams) (avito.Banners, error)
 	GetAllBanners(params avito.BannerQueryParams) ([]avito.AllBanners, error)
 	GetAllBannersForAdmin(params avito.BannerQueryParams) ([]avito.AllBanners, error)
 	UpdateBanner(bannerID int, input avito.UpdateBanner) error
