@@ -43,7 +43,7 @@ func TestHandler_userIdentity(t *testing.T) {
 			token:                 "token",
 			mockBehaivior:         func(s *mock_service.MockAuthorization, token string) {},
 			expectedStatusCode:    401,
-			exptextedResponseBody: `{"error":"empty auth header"}`,
+			exptextedResponseBody: `{"error":"Пользователь не авторизован"}`,
 		},
 		{
 			name:                  "Invailed Bearer or Empty Token",
@@ -51,7 +51,7 @@ func TestHandler_userIdentity(t *testing.T) {
 			token:                 "Bearrtoken",
 			mockBehaivior:         func(s *mock_service.MockAuthorization, token string) {},
 			expectedStatusCode:    401,
-			exptextedResponseBody: `{"error":"empty auth header"}`,
+			exptextedResponseBody: `{"error":"Пользователь не авторизован"}`,
 		},
 		{
 			name:        "Service Failure",
@@ -59,10 +59,10 @@ func TestHandler_userIdentity(t *testing.T) {
 			headerValue: "Bearer token",
 			token:       "token",
 			mockBehaivior: func(s *mock_service.MockAuthorization, token string) {
-				s.EXPECT().ParseToken(token).Return(1, errors.New("service failure"))
+				s.EXPECT().ParseToken(token).Return(1, errors.New("Пользователь не авторизован"))
 			},
 			expectedStatusCode:    401,
-			exptextedResponseBody: `{"error":"service failure"}`,
+			exptextedResponseBody: `{"error":"Пользователь не авторизован"}`,
 		},
 	}
 	for _, testCase := range testTable {

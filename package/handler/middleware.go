@@ -19,14 +19,14 @@ func (h *Handler) userIdentity(next http.HandlerFunc) http.HandlerFunc {
 
 		if header == "" {
 			logger.Log.Error("empty auth header")
-			NewErrorResponse(w, http.StatusUnauthorized, "empty auth header")
+			NewErrorResponse(w, http.StatusUnauthorized, "Пользователь не авторизован")
 			return
 		}
 
 		headerParts := strings.Split(header, " ")
 		if len(headerParts) != 2 {
 			logger.Log.Error("invalid auth header")
-			NewErrorResponse(w, http.StatusUnauthorized, "invalid auth header")
+			NewErrorResponse(w, http.StatusUnauthorized, "Пользователь не авторизован")
 			return
 		}
 
@@ -34,7 +34,7 @@ func (h *Handler) userIdentity(next http.HandlerFunc) http.HandlerFunc {
 
 		if headerParts[0] != "Bearer" {
 			logger.Log.Error("invalid auth header")
-			NewErrorResponse(w, http.StatusUnauthorized, "invailed auth header")
+			NewErrorResponse(w, http.StatusUnauthorized, "Пользователь не авторизован")
 		}
 
 		if token == "" {
@@ -58,7 +58,7 @@ func (h *Handler) userIdentity(next http.HandlerFunc) http.HandlerFunc {
 func getUserId(r *http.Request) (int, error) {
 	userId := r.Context().Value(userCtx)
 	if userId == nil {
-		return 0, errors.New("user id not found")
+		return 0, errors.New("Пользователь не найден")
 	}
 
 	idInt, ok := userId.(int)
@@ -81,7 +81,7 @@ func (h *Handler) checkAdminStatus(w http.ResponseWriter, r *http.Request) error
 	}
 
 	if !user {
-		return errors.New("user is not admin")
+		return errors.New("Пользователь не имеет доступа")
 	}
 
 	return nil
