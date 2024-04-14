@@ -151,80 +151,6 @@ func TestHadnler_GetAllBanners(t *testing.T) {
 	}
 }
 
-/*
-func TestHadnler_GetAllBanners(t *testing.T) {
-	type mockBehavior func(s *mock_service.MockBanner, tagID int, featureID int, limit int, offset int)
-
-	testTable := []struct {
-		name                string
-		requestURL          string
-		mockBehavior        mockBehavior
-		expectedStatusCode  int
-		expectedRequestBody string
-	}{
-		{
-			name:       "OK",
-			requestURL: "/banner/1/1/10/0",
-			mockBehavior: func(s *mock_service.MockBanner, tagID int, featureID int, limit int, offset int) {
-				createdAt, _ := time.Parse(time.RFC3339, "2024-04-12T09:55:56.927Z")
-				updatedAt, _ := time.Parse(time.RFC3339, "2024-04-12T09:55:56.927Z")
-
-				banners := []avito.AllBanners{
-					{
-						BannerID:  1,
-						TagIDs:    []int{1},
-						FeatureId: 1,
-						Title:     "some_title",
-						Text:      "some_text",
-						URL:       "some_url",
-						IsActive:  true,
-						CreatedAt: createdAt,
-						UpdatedAt: updatedAt,
-					},
-				}
-				s.EXPECT().GetAllBanners(1, 1, 10, 0).Return(banners, nil)
-			},
-			expectedStatusCode:  200,
-			expectedRequestBody: `[{"banner_id":1,"tag_ids":[1],"feature_id":1,"content":{"title":"some_title","text":"some_text","url":"some_url"},"is_active":true,"created_at":"2024-04-12T09:55:56.927Z","updated_at":"2024-04-12T09:55:56.927Z"}]`,
-		},
-		{
-			name:       "Invailid ID parameter",
-			requestURL: "/banner/1/1",
-			mockBehavior: func(s *mock_service.MockBanner, tagID int, featureID int, limit int, offset int) {
-			},
-			expectedStatusCode:  400,
-			expectedRequestBody: `{"error":"missing id parameter"}`,
-		},
-	}
-	for _, testCase := range testTable {
-		t.Run(testCase.name, func(t *testing.T) {
-			c := gomock.NewController(t)
-			defer c.Finish()
-
-			bannerService := mock_service.NewMockBanner(c)
-			testCase.mockBehavior(bannerService, 1, 1, 10, 0)
-
-			services := &service.Service{Banner: bannerService}
-			handler := NewHandler(services)
-
-			mux := http.NewServeMux()
-			mux.HandleFunc("/banner/", handler.handleGetAllBanners)
-
-			req := httptest.NewRequest("GET", testCase.requestURL, nil)
-
-			w := httptest.NewRecorder()
-
-			mux.ServeHTTP(w, req)
-
-			actual := strings.TrimSpace(w.Body.String())
-			expected := strings.TrimSpace(testCase.expectedRequestBody)
-
-			assert.Equal(t, testCase.expectedStatusCode, w.Code)
-			assert.Equal(t, expected, actual)
-		})
-	}
-}
-
 func TestHandler_handleUpdateBanner(t *testing.T) {
 	type mockBehavior func(s *mock_service.MockBanner, id int)
 
@@ -240,7 +166,7 @@ func TestHandler_handleUpdateBanner(t *testing.T) {
 			requestURL:          "/banner/1",
 			mockBehavior:        func(s *mock_service.MockBanner, id int) {},
 			expectedStatusCode:  403,
-			expectedRequestBody: `{"error":"This function is only available to the administrator"}`,
+			expectedRequestBody: `{"error":"Пользователь не имеет доступа"}`,
 		},
 		{
 			name:                "Missing ID Parameter",
@@ -297,7 +223,7 @@ func TestHandler_handleDeleteBanner(t *testing.T) {
 			requestURL:          "/banner/1",
 			mockBehavior:        func(s *mock_service.MockBanner, id int) {},
 			expectedStatusCode:  403,
-			expectedRequestBody: `{"error":"This function is only available to the administrator"}`,
+			expectedRequestBody: `{"error":"Пользователь не имеет доступа"}`,
 		},
 		{
 			name:                "Missing ID Parameter",
@@ -337,4 +263,4 @@ func TestHandler_handleDeleteBanner(t *testing.T) {
 
 		})
 	}
-}*/
+}

@@ -37,3 +37,29 @@ CREATE TABLE Users(
     password_hash VARCHAR NOT NULL, 
     is_admin BOOLEAN NOT NULL
 );
+
+
+DO $$
+BEGIN
+    FOR i IN 1..5000 LOOP
+        -- Вставка данных в таблицу Banners
+        INSERT INTO Banners (feature_id, title, text, url)
+        VALUES (i, 'Title ' || i, 'Text ' || i, 'http://example.com/banner' || i);
+
+        -- Вставка данных в таблицу Tags
+        INSERT INTO Tags (tag_name)
+        VALUES ('Tag ' || i);
+
+        -- Вставка данных в таблицу Features
+        INSERT INTO Features (feature_name)
+        VALUES ('Feature ' || i);
+
+        -- Вставка данных в таблицу BannerTags (связь между Banners и Tags)
+        INSERT INTO BannerTags (banner_id, tag_id)
+        VALUES (i, i); -- Примерное предположение о связи между Banners и Tags
+
+        -- Вставка данных в таблицу BannerFeatures (связь между Banners и Features)
+        INSERT INTO BannerFeatures (banner_id, feature_id)
+        VALUES (i, i); -- Примерное предположение о связи между Banners и Features
+    END LOOP;
+END$$;

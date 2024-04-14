@@ -334,7 +334,68 @@ func (b *BannerPostgres) GetAllBanners(params avito.BannerQueryParams) ([]avito.
 			logger.Log.Error("Failed to set data to redis", err.Error())
 			return banners, err
 		}
-	} else if params.TagID != 0 {
+	} else if params.TagID != 0 && params.FeatureID == 0 {
+		bannersQuery := fmt.Sprintf(`
+    SELECT
+        b.banner_id,
+        b.feature_id,
+        b.title, 
+        b.text, 
+        b.url,
+        b.is_active,
+        b.created_at,
+        b.updated_at
+    FROM
+        %s b
+    WHERE
+        EXISTS (
+            SELECT 1
+            FROM %s t
+            INNER JOIN %s bt ON t.tag_id = bt.tag_id
+            WHERE bt.banner_id = b.banner_id
+              AND t.tag_id = $1
+        ) AND b.is_active=$2
+    OFFSET $3
+    LIMIT CASE WHEN $4=0 THEN 10000 ELSE $4 END
+`, bannersTable, tagsTable, bannerTagsTable)
+
+		err = b.db.Select(&banners, bannersQuery, params.TagID, isActive, params.Offset, params.Limit)
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range banners {
+			tagsQuery := fmt.Sprintf(`
+        SELECT
+            t.tag_id
+        FROM
+            %s t
+        WHERE
+            t.banner_id=$1 AND
+			t.tag_id = $2
+        `, bannerTagsTable)
+
+			var tagIDs []int
+			err := b.db.Select(&tagIDs, tagsQuery, banners[i].BannerID, params.TagID)
+			if err != nil {
+				return nil, err
+			}
+
+			banners[i].TagIDs = tagIDs
+		}
+
+		value, err := json.Marshal(banners)
+		if err != nil {
+			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
+			return banners, err
+		}
+
+		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
+		if err != nil {
+			logger.Log.Error("Failed to set data to redis", err.Error())
+			return banners, err
+		}
+	} else if params.FeatureID != 0 && params.TagID == 0 {
 		bannersQuery := fmt.Sprintf(`
     SELECT
         b.banner_id,
@@ -348,12 +409,20 @@ func (b *BannerPostgres) GetAllBanners(params avito.BannerQueryParams) ([]avito.
     FROM
         %s b
     WHERE
-		b.is_active=$1
-    OFFSET $2
-    LIMIT CASE WHEN $3=0 THEN 10000 ELSE $3 END
-    `, bannersTable)
+		EXISTS (
+			SELECT 1
+			FROM %s f
+			INNER JOIN %s bf ON f.feature_id = bf.feature_id
+			WHERE bf.banner_id = b.banner_id
+			AND f.feature_id = $1
+		)
+	AND
+		b.is_active=$2
+    OFFSET $3
+    LIMIT CASE WHEN $4=0 THEN 10000 ELSE $4 END
+    `, bannersTable, featureTable, bannerFeaturesTable)
 
-		err = b.db.Select(&banners, bannersQuery, isActive, params.Offset, params.Limit)
+		err = b.db.Select(&banners, bannersQuery, params.FeatureID, isActive, params.Offset, params.Limit)
 		if err != nil {
 			return nil, err
 		}
@@ -388,43 +457,6 @@ func (b *BannerPostgres) GetAllBanners(params avito.BannerQueryParams) ([]avito.
 			logger.Log.Error("Failed to set data to redis", err.Error())
 			return banners, err
 		}
-	} else if params.FeatureID != 0 {
-		bannersQuery := fmt.Sprintf(`
-    SELECT
-        b.banner_id,
-        b.feature_id,
-        b.title, 
-		b.text, 
-		b.url,
-        b.is_active,
-        b.created_at,
-        b.updated_at
-    FROM
-        %s b
-    WHERE
-        b.feature_id=$1
-	AND
-		b.is_active=$2
-    OFFSET $3
-    LIMIT CASE WHEN $4=0 THEN 10000 ELSE $4 END
-    `, bannersTable)
-
-		err = b.db.Select(&banners, bannersQuery, params.FeatureID, isActive, params.Offset, params.Limit)
-		if err != nil {
-			return nil, err
-		}
-
-		value, err := json.Marshal(banners)
-		if err != nil {
-			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
-			return banners, err
-		}
-
-		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
-		if err != nil {
-			logger.Log.Error("Failed to set data to redis", err.Error())
-			return banners, err
-		}
 	} else if params.FeatureID == 0 && params.TagID == 0 {
 		bannersQuery := fmt.Sprintf(`
     SELECT
@@ -445,6 +477,25 @@ func (b *BannerPostgres) GetAllBanners(params avito.BannerQueryParams) ([]avito.
 		err = b.db.Select(&banners, bannersQuery, params.Offset, params.Limit)
 		if err != nil {
 			return nil, err
+		}
+
+		for i := range banners {
+			tagsQuery := fmt.Sprintf(`
+        SELECT
+            t.tag_id
+        FROM
+            %s t
+        WHERE
+            t.banner_id=$1
+        `, bannerTagsTable)
+
+			var tagIDs []int
+			err := b.db.Select(&tagIDs, tagsQuery, banners[i].BannerID)
+			if err != nil {
+				return nil, err
+			}
+
+			banners[i].TagIDs = tagIDs
 		}
 
 		value, err := json.Marshal(banners)
@@ -546,7 +597,128 @@ func (b *BannerPostgres) GetAllBannersForAdmin(params avito.BannerQueryParams) (
 			logger.Log.Error("Failed to set data to redis", err.Error())
 			return banners, err
 		}
-	} else if params.TagID != 0 {
+	} else if params.TagID != 0 && params.FeatureID == 0 {
+		bannersQuery := fmt.Sprintf(`
+		SELECT
+			b.banner_id,
+			b.feature_id,
+			b.title, 
+			b.text, 
+			b.url,
+			b.is_active,
+			b.created_at,
+			b.updated_at
+		FROM
+			%s b
+		WHERE
+			EXISTS (
+				SELECT 1
+				FROM %s t
+				INNER JOIN %s bt ON t.tag_id = bt.tag_id
+				WHERE bt.banner_id = b.banner_id
+				  AND t.tag_id = $1
+			)
+		OFFSET $2
+		LIMIT CASE WHEN $3=0 THEN 10000 ELSE $3 END
+	`, bannersTable, tagsTable, bannerTagsTable)
+
+		err = b.db.Select(&banners, bannersQuery, params.TagID, params.Offset, params.Limit)
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range banners {
+			tagsQuery := fmt.Sprintf(`
+        SELECT
+            t.tag_id
+        FROM
+            %s t
+        WHERE
+            t.banner_id=$1  AND
+			t.tag_id = $2
+        `, bannerTagsTable)
+
+			var tagIDs []int
+			err := b.db.Select(&tagIDs, tagsQuery, banners[i].BannerID, params.TagID)
+			if err != nil {
+				return nil, err
+			}
+
+			banners[i].TagIDs = tagIDs
+		}
+
+		value, err := json.Marshal(banners)
+		if err != nil {
+			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
+			return banners, err
+		}
+
+		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
+		if err != nil {
+			logger.Log.Error("Failed to set data to redis", err.Error())
+			return banners, err
+		}
+	} else if params.FeatureID != 0 && params.TagID == 0 {
+		bannersQuery := fmt.Sprintf(`
+    SELECT
+        b.banner_id,
+        b.feature_id,
+        b.title, 
+		b.text, 
+		b.url,
+        b.is_active,
+        b.created_at,
+        b.updated_at
+    FROM
+        %s b
+    WHERE
+		EXISTS (
+			SELECT 1
+			FROM %s f
+			INNER JOIN %s bf ON f.feature_id = bf.feature_id
+			WHERE bf.banner_id = b.banner_id
+			AND f.feature_id = $1
+		)
+    OFFSET $2
+    LIMIT CASE WHEN $3=0 THEN 10000 ELSE $3 END
+    `, bannersTable, featureTable, bannerFeaturesTable)
+
+		err = b.db.Select(&banners, bannersQuery, params.FeatureID, params.Offset, params.Limit)
+		if err != nil {
+			return nil, err
+		}
+
+		for i := range banners {
+			tagsQuery := fmt.Sprintf(`
+        SELECT
+            t.tag_id
+        FROM
+            %s t
+        WHERE
+            t.banner_id=$1
+        `, bannerTagsTable)
+
+			var tagIDs []int
+			err := b.db.Select(&tagIDs, tagsQuery, banners[i].BannerID)
+			if err != nil {
+				return nil, err
+			}
+
+			banners[i].TagIDs = tagIDs
+		}
+
+		value, err := json.Marshal(banners)
+		if err != nil {
+			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
+			return banners, err
+		}
+
+		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
+		if err != nil {
+			logger.Log.Error("Failed to set data to redis", err.Error())
+			return banners, err
+		}
+	} else if params.FeatureID == 0 && params.TagID == 0 {
 		bannersQuery := fmt.Sprintf(`
     SELECT
         b.banner_id,
@@ -585,74 +757,6 @@ func (b *BannerPostgres) GetAllBannersForAdmin(params avito.BannerQueryParams) (
 			}
 
 			banners[i].TagIDs = tagIDs
-		}
-
-		value, err := json.Marshal(banners)
-		if err != nil {
-			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
-			return banners, err
-		}
-
-		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
-		if err != nil {
-			logger.Log.Error("Failed to set data to redis", err.Error())
-			return banners, err
-		}
-	} else if params.FeatureID != 0 {
-		bannersQuery := fmt.Sprintf(`
-    SELECT
-        b.banner_id,
-        b.feature_id,
-        b.title, 
-		b.text, 
-		b.url,
-        b.is_active,
-        b.created_at,
-        b.updated_at
-    FROM
-        %s b
-    WHERE
-        b.feature_id=$1
-    OFFSET $2
-    LIMIT CASE WHEN $3=0 THEN 10000 ELSE $3 END
-    `, bannersTable)
-
-		err = b.db.Select(&banners, bannersQuery, params.FeatureID, params.Offset, params.Limit)
-		if err != nil {
-			return nil, err
-		}
-
-		value, err := json.Marshal(banners)
-		if err != nil {
-			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
-			return banners, err
-		}
-
-		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
-		if err != nil {
-			logger.Log.Error("Failed to set data to redis", err.Error())
-			return banners, err
-		}
-	} else if params.FeatureID == 0 && params.TagID == 0 {
-		bannersQuery := fmt.Sprintf(`
-    SELECT
-        b.banner_id,
-        b.feature_id,
-        b.title, 
-		b.text, 
-		b.url,
-        b.is_active,
-        b.created_at,
-        b.updated_at
-    FROM
-        %s b
-    OFFSET $1
-    LIMIT CASE WHEN $2=0 THEN 10000 ELSE $2 END
-    `, bannersTable)
-
-		err = b.db.Select(&banners, bannersQuery, params.Offset, params.Limit)
-		if err != nil {
-			return nil, err
 		}
 
 		value, err := json.Marshal(banners)

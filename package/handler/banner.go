@@ -343,11 +343,11 @@ func (h *Handler) handleCreateBanner(w http.ResponseWriter, r *http.Request) {
 
 	logger.Log.Info("Handling Create Banner request")
 
-	/*if err := h.checkAdminStatus(w, r); err != nil {
+	if err := h.checkAdminStatus(w, r); err != nil {
 		logger.Log.Error("Admin status is not available:", err.Error())
 		NewErrorResponse(w, http.StatusForbidden, "Пользователь не имеет доступа")
 		return
-	}*/
+	}
 
 	var request bannerRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
