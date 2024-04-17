@@ -2,9 +2,12 @@ package handler
 
 import (
 	logger "avito_testcase/logs"
+	"avito_testcase/package/helpers"
+	"avito_testcase/package/metrics"
 	"context"
 	"errors"
 	"net/http"
+
 	"strings"
 )
 
@@ -85,4 +88,18 @@ func (h *Handler) checkAdminStatus(w http.ResponseWriter, r *http.Request) error
 	}
 
 	return nil
+}
+
+func HTTPMetrics(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		srw := helpers.NewStatusResponseWriter(w)
+
+		next.ServeHTTP(srw, r)
+
+		status := srw.GetStatusString()
+		pattern := r.URL.Path
+		method := r.Method
+
+		metrics.HttpRequestsTotal.WithLabelValues(pattern, method, status).Inc()
+	})
 }

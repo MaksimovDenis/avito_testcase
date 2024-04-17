@@ -6,6 +6,7 @@ import (
 
 	_ "avito_testcase/docs"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
@@ -44,14 +45,23 @@ func (h *Handler) InitRoutes() *http.ServeMux {
 
 	//GET
 	//.../user_banner
-	mux.HandleFunc("/user_banner", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/user_banner", HTTPMetrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			h.userIdentity(h.handleGetBannerByTagAndFeature)(w, r)
 			return
 		} else {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
-	})
+	})))
+
+	/*mux.Handle("/user_banner", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			h.userIdentity(h.handleGetBannerByTagAndFeature)(w, r)
+			return
+		} else {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	}))*/
 
 	//GET, POST, PATCH, DELETE
 	//.../banner
@@ -86,6 +96,8 @@ func (h *Handler) InitRoutes() *http.ServeMux {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
+
+	mux.Handle("/metrics", promhttp.Handler())
 
 	return mux
 }
