@@ -23,6 +23,8 @@ func (h *Handler) InitRoutes() *http.ServeMux {
 
 	mux.Handle("/swagger/", httpSwagger.Handler())
 
+	mux.Handle("/metrics", promhttp.Handler())
+
 	auth := "/auth"
 
 	mux.HandleFunc(auth+"/sing-up", func(w http.ResponseWriter, r *http.Request) {
@@ -54,18 +56,9 @@ func (h *Handler) InitRoutes() *http.ServeMux {
 		}
 	})))
 
-	/*mux.Handle("/user_banner", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			h.userIdentity(h.handleGetBannerByTagAndFeature)(w, r)
-			return
-		} else {
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		}
-	}))*/
-
 	//GET, POST, PATCH, DELETE
 	//.../banner
-	mux.HandleFunc("/banner", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/banner", HTTPMetrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			h.userIdentity(h.handleGetAllBanners)(w, r)
 			return
@@ -81,11 +74,11 @@ func (h *Handler) InitRoutes() *http.ServeMux {
 		} else {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
-	})
+	})))
 
 	//PATCH, DELETE
 	//.../banner/{id}
-	mux.HandleFunc("/banner/", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/banner/", HTTPMetrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPatch {
 			h.userIdentity(h.handleUpdateBanner)(w, r)
 			return
@@ -95,9 +88,7 @@ func (h *Handler) InitRoutes() *http.ServeMux {
 		} else {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
-	})
-
-	mux.Handle("/metrics", promhttp.Handler())
+	})))
 
 	return mux
 }

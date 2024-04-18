@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"strings"
 )
@@ -93,13 +94,18 @@ func (h *Handler) checkAdminStatus(w http.ResponseWriter, r *http.Request) error
 func HTTPMetrics(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		srw := helpers.NewStatusResponseWriter(w)
+		now := time.Now()
 
 		next.ServeHTTP(srw, r)
 
+		elapsedSeconds := time.Since(now).Seconds()
 		status := srw.GetStatusString()
 		pattern := r.URL.Path
 		method := r.Method
 
 		metrics.HttpRequestsTotal.WithLabelValues(pattern, method, status).Inc()
+		metrics.HttpRequestsDurationHistogram.WithLabelValues(pattern, method).Observe(elapsedSeconds)
+		metrics.HttpRequestsDurationSummary.WithLabelValues(pattern, method).Observe(elapsedSeconds)
+
 	})
 }

@@ -15,7 +15,6 @@ services:
       - DB_PASSWORD=admin
       - REDIS_PASSWORD=admin
 
-
   db:
     restart: always
     image: postgres:latest
@@ -36,3 +35,24 @@ services:
       - REDIS_PASSWORD=admin
     ports:
       - 6310:6379
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - 9090:9090
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - local
+  
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - 3000:3000
+    networks:
+      - local
+  
+networks:
+  local:
+
+
