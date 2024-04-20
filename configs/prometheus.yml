@@ -1,7 +1,5 @@
-global:
-  scrape_interval: 30s
-
 scrape_configs:
   - job_name: 'avito_testcase'
+    scrape_interval: 30s
     static_configs:
-      - targets: [localhost:8000]
+      - targets: ['avito_testcase:8000']

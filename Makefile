@@ -24,7 +24,7 @@ build:
 
 ## Build and start the containers
 up:
-	docker-compose up --build
+	docker-compose up --build 
 
 ## Stop and remove containers
 down:
@@ -45,8 +45,10 @@ test-coverage:
 chmod:
 	sudo chmod -R 777 ./databaseRedis 
 	sudo chmod -R 777 ./database 
+	sudo chmod -R 777 ./prometheus 
+	sudo chmod -R 777 ./grafana 
 
 ## Delete DB Folders
 rm:
-	sudo rm -rf ./database ./databaseRedis
+	sudo rm -rf ./database ./databaseRedis ./grafana ./prometheus
 

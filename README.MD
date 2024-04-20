@@ -93,6 +93,9 @@ make help
 ![image](https://github.com/MaksimovDenis/vk_restAPI/assets/44647373/35de93ca-27e4-440a-8e70-8d39cb3cb796)  
 ![image](https://github.com/MaksimovDenis/vk_restAPI/assets/44647373/0023987d-8879-4249-ab2c-b8f3b5ab00e0)  
 
+# Метрики сервиса
+ - Связка prometheus + grafana, паттерн 4 golden signals.
+![image](https://github.com/MaksimovDenis/vk_restAPI/assets/44647373/e9908c1f-2e6e-4e2d-b223-bc53b4f6bfbf)
 
 
 
