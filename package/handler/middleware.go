@@ -1,15 +1,18 @@
 package handler
 
 import (
-	logger "avito_testcase/logs"
-	"avito_testcase/package/helpers"
-	"avito_testcase/package/metrics"
 	"context"
 	"errors"
 	"net/http"
 	"time"
 
+	"github.com/MaksimovDenis/avito_testcase/package/metrics"
+
+	"github.com/MaksimovDenis/avito_testcase/package/helpers"
+
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -22,14 +25,14 @@ func (h *Handler) userIdentity(next http.HandlerFunc) http.HandlerFunc {
 		header := r.Header.Get(authorizationHeader)
 
 		if header == "" {
-			logger.Log.Error("empty auth header")
+			logrus.Error("empty auth header")
 			NewErrorResponse(w, http.StatusUnauthorized, "Пользователь не авторизован")
 			return
 		}
 
 		headerParts := strings.Split(header, " ")
 		if len(headerParts) != 2 {
-			logger.Log.Error("invalid auth header")
+			logrus.Error("invalid auth header")
 			NewErrorResponse(w, http.StatusUnauthorized, "Пользователь не авторизован")
 			return
 		}
@@ -37,12 +40,12 @@ func (h *Handler) userIdentity(next http.HandlerFunc) http.HandlerFunc {
 		token := headerParts[1]
 
 		if headerParts[0] != "Bearer" {
-			logger.Log.Error("invalid auth header")
+			logrus.Error("invalid auth header")
 			NewErrorResponse(w, http.StatusUnauthorized, "Пользователь не авторизован")
 		}
 
 		if token == "" {
-			logger.Log.Error("token is empty")
+			logrus.Error("token is empty")
 			NewErrorResponse(w, http.StatusUnauthorized, "token is empty")
 		}
 

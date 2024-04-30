@@ -3,9 +3,7 @@ version: '3.8'
 services:
   avito_testcase:
     build: ./
-    command: ./wait-for-postgres.sh db ./avito_testcase
-    volumes:
-      - ./logs:/app/logs
+    restart: on-failure
     ports:
       - 8000:8000
     depends_on:

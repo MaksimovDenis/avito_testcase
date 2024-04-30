@@ -1,11 +1,12 @@
 package repository
 
 import (
-	avito "avito_testcase"
-	logger "avito_testcase/logs"
 	"fmt"
 
+	avito "github.com/MaksimovDenis/avito_testcase"
+
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 type AuthPostgres struct {
@@ -22,7 +23,7 @@ func (a *AuthPostgres) CreateUser(user avito.User) (int, error) {
 
 	row := a.db.QueryRow(qurey, user.Username, user.Password, user.Is_admin)
 	if err := row.Scan(&id); err != nil {
-		logger.Log.Error("Failed to encode response", err.Error())
+		logrus.Error("Failed to encode response", err.Error())
 		return 0, err
 	}
 	return id, nil

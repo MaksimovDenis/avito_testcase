@@ -1,8 +1,9 @@
 package service
 
 import (
-	avito "avito_testcase"
-	"avito_testcase/package/repository"
+	"github.com/MaksimovDenis/avito_testcase/package/repository"
+
+	avito "github.com/MaksimovDenis/avito_testcase"
 )
 
 type BannerService struct {

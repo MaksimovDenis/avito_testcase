@@ -1,10 +1,12 @@
 package handler
 
 import (
-	avito "avito_testcase"
-	logger "avito_testcase/logs"
 	"encoding/json"
 	"net/http"
+
+	avito "github.com/MaksimovDenis/avito_testcase"
+
+	"github.com/sirupsen/logrus"
 )
 
 // @Summary SingUp
@@ -19,27 +21,27 @@ import (
 // @Failure 500 {object} Err
 // @Router       /auth/sing-up [post]
 func (h *Handler) handleSingUp(w http.ResponseWriter, r *http.Request) {
-	logger.Log.Info("Handling Sign Up")
+	logrus.Info("Handling Sign Up")
 
 	var input avito.User
 
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		logger.Log.Error("Failed to decaode request body:", err.Error())
+		logrus.Error("Failed to decaode request body:", err.Error())
 		NewErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if input.Username == "" || input.Password == "" {
 		errMsg := "Username and password are required"
-		logger.Log.Error(errMsg)
+		logrus.Error(errMsg)
 		NewErrorResponse(w, http.StatusBadRequest, errMsg)
 		return
 	}
 
 	id, err := h.service.Authorization.CreateUser(input)
 	if err != nil {
-		logger.Log.Error("Failed to create new user:", err.Error())
+		logrus.Error("Failed to create new user:", err.Error())
 		NewErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -51,7 +53,7 @@ func (h *Handler) handleSingUp(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		logger.Log.Error("Failed to encode response", err.Error())
+		logrus.Error("Failed to encode response", err.Error())
 	}
 }
 
@@ -73,27 +75,27 @@ type logInInput struct {
 // @Router       /auth/log-in [post]
 func (h *Handler) handleSingIn(w http.ResponseWriter, r *http.Request) {
 
-	logger.Log.Info("Handling Log In")
+	logrus.Info("Handling Log In")
 
 	var input logInInput
 
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		logger.Log.Error("Failed to decaode request body:", err.Error())
+		logrus.Error("Failed to decaode request body:", err.Error())
 		NewErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if input.Username == "" || input.Password == "" {
 		errMsg := "Username and password are required"
-		logger.Log.Error(errMsg)
+		logrus.Error(errMsg)
 		NewErrorResponse(w, http.StatusBadRequest, errMsg)
 		return
 	}
 
 	token, err := h.service.Authorization.GenerateToken(input.Username, input.Password)
 	if err != nil {
-		logger.Log.Error("Failed to generate JWT Token:", err.Error())
+		logrus.Error("Failed to generate JWT Token:", err.Error())
 		NewErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -105,7 +107,7 @@ func (h *Handler) handleSingIn(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		logger.Log.Error("Failed to encode response", err.Error())
+		logrus.Error("Failed to encode response", err.Error())
 	}
 
 }

@@ -5,7 +5,7 @@
 package mock_service
 
 import (
-	avito "avito_testcase"
+	avito "github.com/MaksimovDenis/avito_testcase"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"

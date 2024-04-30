@@ -1,14 +1,16 @@
 package handler
 
 import (
-	avito "avito_testcase"
-	"avito_testcase/package/service"
-	mock_service "avito_testcase/package/service/mocks"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/MaksimovDenis/avito_testcase/package/service"
+
+	avito "github.com/MaksimovDenis/avito_testcase"
+	mock_service "github.com/MaksimovDenis/avito_testcase/package/service/mocks"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"

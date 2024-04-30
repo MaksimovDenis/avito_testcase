@@ -1,15 +1,17 @@
 package service
 
 import (
-	avito "avito_testcase"
-	logger "avito_testcase/logs"
-	"avito_testcase/package/repository"
 	"crypto/sha1"
 	"errors"
 	"fmt"
 	"time"
 
+	"github.com/MaksimovDenis/avito_testcase/package/repository"
+
+	avito "github.com/MaksimovDenis/avito_testcase"
+
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -43,7 +45,7 @@ func (a *AuthService) GetUserStatus(id int) (bool, error) {
 func (a *AuthService) GenerateToken(username, password string) (string, error) {
 	user, err := a.repo.GetUser(username, generatePassword(password))
 	if err != nil {
-		logger.Log.Info("Failed to generate password during get user")
+		logrus.Info("Failed to generate password during get user")
 		return "", err
 	}
 
@@ -60,7 +62,7 @@ func (a *AuthService) GenerateToken(username, password string) (string, error) {
 func (a *AuthService) ParseToken(accessToken string) (int, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			logger.Log.Info("invalid singing method")
+			logrus.Info("invalid singing method")
 			return nil, errors.New("invalid singing method")
 		}
 
@@ -72,7 +74,7 @@ func (a *AuthService) ParseToken(accessToken string) (int, error) {
 
 	claims, ok := token.Claims.(*tokenClaims)
 	if !ok {
-		logger.Log.Info("token claims are not of type *TokenClaims")
+		logrus.Info("token claims are not of type *TokenClaims")
 		return 0, errors.New("token claims are not of type *TokenClaims")
 	}
 

@@ -1,17 +1,18 @@
 package main
 
 import (
-	avito "avito_testcase"
-	logger "avito_testcase/logs"
-	"avito_testcase/package/handler"
-	"avito_testcase/package/repository"
-	"avito_testcase/package/service"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/signal"
 	"syscall"
+
+	avito "github.com/MaksimovDenis/avito_testcase"
+	"github.com/MaksimovDenis/avito_testcase/package/handler"
+	"github.com/MaksimovDenis/avito_testcase/package/repository"
+
+	"github.com/MaksimovDenis/avito_testcase/package/service"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -100,7 +101,7 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("failed to initialize redis: %s", err.Error())
 	}
-	logger.Log.Info(ping)
+	logrus.Info(ping)
 
 	//Creating our dependencies
 	repositories := repository.NewRepository(db)
@@ -115,20 +116,20 @@ func main() {
 		}
 	}()
 
-	logger.Log.Info("App started")
+	logrus.Info("App started")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	<-quit
 
-	logger.Log.Info("App is shutting down")
+	logrus.Info("App is shutting down")
 
 	if err := srv.Shutdown(context.Background()); err != nil {
-		logger.Log.Errorf("error occured on server shutting down: %s", err.Error())
+		logrus.Errorf("error occured on server shutting down: %s", err.Error())
 	}
 
 	if err := db.Close(); err != nil {
-		logger.Log.Errorf("error occured on db connection close: %s", err.Error())
+		logrus.Errorf("error occured on db connection close: %s", err.Error())
 	}
 
 }

@@ -1,14 +1,16 @@
 package handler
 
 import (
-	avito "avito_testcase"
-	logger "avito_testcase/logs"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	avito "github.com/MaksimovDenis/avito_testcase"
+
+	"github.com/sirupsen/logrus"
 )
 
 type bannerRequest struct {
@@ -44,7 +46,7 @@ type getBannerByTagAndFeatureResponse struct {
 // @Router /user_banner [get]
 func (h *Handler) handleGetBannerByTagAndFeature(w http.ResponseWriter, r *http.Request) {
 
-	logger.Log.Info("Handling Get Banner By Tag And Feature")
+	logrus.Info("Handling Get Banner By Tag And Feature")
 
 	var tag_id, feature_id int
 	var use_last_revision bool
@@ -54,34 +56,34 @@ func (h *Handler) handleGetBannerByTagAndFeature(w http.ResponseWriter, r *http.
 	featureIDstr := r.URL.Query().Get("feature_id")
 	lastrevisionStr := r.URL.Query().Get("use_last_revision")
 	if strings.Contains(tagIDstr, "-") || strings.Contains(featureIDstr, "-") || strings.Contains(lastrevisionStr, "-") {
-		logger.Log.Error("Parameter must be positive")
+		logrus.Error("Parameter must be positive")
 		NewErrorResponse(w, http.StatusBadRequest, "Parameter must be positive")
 		return
 	}
 
 	tag_id, err = strconv.Atoi(tagIDstr)
 	if err != nil || tag_id < 1 {
-		logger.Log.Error("Invalid Tag ID parameter: ", err.Error())
+		logrus.Error("Invalid Tag ID parameter: ", err.Error())
 		NewErrorResponse(w, http.StatusBadRequest, "Invalid Tag ID parameter")
 		return
 	}
 
 	feature_id, err = strconv.Atoi(featureIDstr)
 	if err != nil || feature_id < 1 {
-		logger.Log.Error("Invalid Feature ID parameter: ", err.Error())
+		logrus.Error("Invalid Feature ID parameter: ", err.Error())
 		NewErrorResponse(w, http.StatusBadRequest, "Invalid Feature ID parameter")
 		return
 	}
 
 	use_last_revision, err = strconv.ParseBool(lastrevisionStr)
 	if err != nil {
-		logger.Log.Error("Ivailid use_last_revision parameter: ", err.Error())
+		logrus.Error("Ivailid use_last_revision parameter: ", err.Error())
 		NewErrorResponse(w, http.StatusBadRequest, "Ivailid use_last_revision parameter")
 		return
 	}
 
 	if tag_id == 0 && feature_id == 0 {
-		logger.Log.Error("Invalid Tag ID and Feature ID parameter: ", err.Error())
+		logrus.Error("Invalid Tag ID and Feature ID parameter: ", err.Error())
 		NewErrorResponse(w, http.StatusBadRequest, "Invalid Tag ID and Feature ID parameter")
 		return
 	}
@@ -95,7 +97,7 @@ func (h *Handler) handleGetBannerByTagAndFeature(w http.ResponseWriter, r *http.
 	if err := h.checkAdminStatus(w, r); err != nil {
 		banner, err := h.service.Banner.GetBannerByTagAndFeature(params)
 		if err != nil {
-			logger.Log.Error("Failed to Get Banner By TagID and FeatureID", err.Error())
+			logrus.Error("Failed to Get Banner By TagID and FeatureID", err.Error())
 			NewErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -110,13 +112,13 @@ func (h *Handler) handleGetBannerByTagAndFeature(w http.ResponseWriter, r *http.
 		w.WriteHeader(http.StatusOK)
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {
-			logger.Log.Error("Failed to encode response", err.Error())
+			logrus.Error("Failed to encode response", err.Error())
 		}
 
 	} else {
 		banner, err := h.service.Banner.GetBannerByTagAndFeatureForAdmin(params)
 		if err != nil {
-			logger.Log.Error("Failed to Get Banner By TagID and FeatureID", err.Error())
+			logrus.Error("Failed to Get Banner By TagID and FeatureID", err.Error())
 			NewErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -131,7 +133,7 @@ func (h *Handler) handleGetBannerByTagAndFeature(w http.ResponseWriter, r *http.
 		w.WriteHeader(http.StatusOK)
 
 		if err := json.NewEncoder(w).Encode(response); err != nil {
-			logger.Log.Error("Failed to encode response", err.Error())
+			logrus.Error("Failed to encode response", err.Error())
 		}
 	}
 
@@ -168,7 +170,7 @@ type getAllBannersResponse struct {
 // @Router /banner [get]
 func (h *Handler) handleGetAllBanners(w http.ResponseWriter, r *http.Request) {
 
-	logger.Log.Info("Handling Get All Banners")
+	logrus.Info("Handling Get All Banners")
 
 	var tag_id, feature_id, limit, offset int
 	var err error
@@ -178,7 +180,7 @@ func (h *Handler) handleGetAllBanners(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
 	if strings.Contains(tagIDstr, "-") || strings.Contains(featureIDstr, "-") || strings.Contains(limitStr, "-") || strings.Contains(offsetStr, "-") {
-		logger.Log.Error("Parameter must be positive")
+		logrus.Error("Parameter must be positive")
 		NewErrorResponse(w, http.StatusBadRequest, "Parameter must be positive")
 		return
 	}
@@ -186,7 +188,7 @@ func (h *Handler) handleGetAllBanners(w http.ResponseWriter, r *http.Request) {
 	if tagIDstr != "" {
 		tag_id, err = strconv.Atoi(tagIDstr)
 		if err != nil || tag_id < 0 {
-			logger.Log.Error("Invalid Tag ID parameter: ", err.Error())
+			logrus.Error("Invalid Tag ID parameter: ", err.Error())
 			NewErrorResponse(w, http.StatusBadRequest, "Invalid Tag ID parameter")
 			fmt.Println(tag_id)
 			return
@@ -198,7 +200,7 @@ func (h *Handler) handleGetAllBanners(w http.ResponseWriter, r *http.Request) {
 	if featureIDstr != "" {
 		feature_id, err = strconv.Atoi(featureIDstr)
 		if err != nil || feature_id < 0 {
-			logger.Log.Error("Invalid Feature ID parameter: ", err.Error())
+			logrus.Error("Invalid Feature ID parameter: ", err.Error())
 			NewErrorResponse(w, http.StatusBadRequest, "Invalid Feature ID parameter")
 			fmt.Println(feature_id)
 			return
@@ -210,7 +212,7 @@ func (h *Handler) handleGetAllBanners(w http.ResponseWriter, r *http.Request) {
 	if limitStr != "" {
 		limit, err = strconv.Atoi(limitStr)
 		if err != nil || limit < 0 {
-			logger.Log.Error("Invalid Limit parameter: ", err.Error())
+			logrus.Error("Invalid Limit parameter: ", err.Error())
 			NewErrorResponse(w, http.StatusBadRequest, "Invalid Limit parameter")
 			fmt.Println(limit)
 			return
@@ -222,7 +224,7 @@ func (h *Handler) handleGetAllBanners(w http.ResponseWriter, r *http.Request) {
 	if offsetStr != "" {
 		offset, err = strconv.Atoi(offsetStr)
 		if err != nil || offset < 0 {
-			logger.Log.Error("Invalid Offset parameter: ", err.Error())
+			logrus.Error("Invalid Offset parameter: ", err.Error())
 			NewErrorResponse(w, http.StatusBadRequest, "Invalid Offset parameter")
 			fmt.Println(offset)
 			return
@@ -243,13 +245,13 @@ func (h *Handler) handleGetAllBanners(w http.ResponseWriter, r *http.Request) {
 	if err := h.checkAdminStatus(w, r); err != nil {
 		banners, err := h.service.Banner.GetAllBanners(params)
 		if err != nil {
-			logger.Log.Error("Failed to Get All Banners", err.Error())
+			logrus.Error("Failed to Get All Banners", err.Error())
 			NewErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		if len(banners) == 0 {
-			logger.Log.Info("The list of banners is empty")
+			logrus.Info("The list of banners is empty")
 			NewErrorResponse(w, http.StatusOK, "The list of banners is empty")
 			return
 		}
@@ -278,20 +280,20 @@ func (h *Handler) handleGetAllBanners(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(responses); err != nil {
-			logger.Log.Error("Failed to encode response", err.Error())
+			logrus.Error("Failed to encode response", err.Error())
 			NewErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 	} else {
 		banners, err := h.service.Banner.GetAllBannersForAdmin(params)
 		if err != nil {
-			logger.Log.Error("Failed to Get All Banners", err.Error())
+			logrus.Error("Failed to Get All Banners", err.Error())
 			NewErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		if len(banners) == 0 {
-			logger.Log.Info("The list of banners is empty")
+			logrus.Info("The list of banners is empty")
 			NewErrorResponse(w, http.StatusOK, "The list of banners is empty")
 			return
 		}
@@ -320,7 +322,7 @@ func (h *Handler) handleGetAllBanners(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(responses); err != nil {
-			logger.Log.Error("Failed to encode response", err.Error())
+			logrus.Error("Failed to encode response", err.Error())
 			NewErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -341,17 +343,17 @@ func (h *Handler) handleGetAllBanners(w http.ResponseWriter, r *http.Request) {
 // @Router /banner [POST]
 func (h *Handler) handleCreateBanner(w http.ResponseWriter, r *http.Request) {
 
-	logger.Log.Info("Handling Create Banner request")
+	logrus.Info("Handling Create Banner request")
 
 	if err := h.checkAdminStatus(w, r); err != nil {
-		logger.Log.Error("Admin status is not available:", err.Error())
+		logrus.Error("Admin status is not available:", err.Error())
 		NewErrorResponse(w, http.StatusForbidden, "Пользователь не имеет доступа")
 		return
 	}
 
 	var request bannerRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		logger.Log.Error("Failed to decode request bodt: ", err.Error())
+		logrus.Error("Failed to decode request bodt: ", err.Error())
 		NewErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -368,7 +370,7 @@ func (h *Handler) handleCreateBanner(w http.ResponseWriter, r *http.Request) {
 
 	bannerID, err := h.service.Banner.CreateBanner(banner, request.TagIDs)
 	if err != nil {
-		logger.Log.Error("Failed to create banner:", err.Error())
+		logrus.Error("Failed to create banner:", err.Error())
 		NewErrorResponse(w, http.StatusInternalServerError, "Failed to create banner")
 		return
 	}
@@ -380,7 +382,7 @@ func (h *Handler) handleCreateBanner(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		logger.Log.Error("Failed to encode response", err.Error())
+		logrus.Error("Failed to encode response", err.Error())
 	}
 }
 
@@ -399,19 +401,19 @@ func (h *Handler) handleCreateBanner(w http.ResponseWriter, r *http.Request) {
 // @Router /banner/{id} [patch]
 func (h *Handler) handleUpdateBanner(w http.ResponseWriter, r *http.Request) {
 
-	logger.Log.Info("Handling Update Banner By BannerID")
+	logrus.Info("Handling Update Banner By BannerID")
 
 	path := r.URL.Path
 
 	parts := strings.Split(path, "/")
 	if len(parts) < 3 {
-		logger.Log.Info("Missing ID parameters")
+		logrus.Info("Missing ID parameters")
 		NewErrorResponse(w, http.StatusBadRequest, "missing id parameter")
 		return
 	}
 
 	if err := h.checkAdminStatus(w, r); err != nil {
-		logger.Log.Error("Admin status is not available:", err.Error())
+		logrus.Error("Admin status is not available:", err.Error())
 		NewErrorResponse(w, http.StatusForbidden, "Пользователь не имеет доступа")
 		return
 	}
@@ -419,20 +421,20 @@ func (h *Handler) handleUpdateBanner(w http.ResponseWriter, r *http.Request) {
 	bannerIDstr := parts[2]
 	id, err := strconv.Atoi(bannerIDstr)
 	if err != nil {
-		logger.Log.Error("Invalid Banner ID parameter: ", err.Error())
+		logrus.Error("Invalid Banner ID parameter: ", err.Error())
 		NewErrorResponse(w, http.StatusBadRequest, "Invalid Tag ID parameter")
 		return
 	}
 
 	var input avito.UpdateBanner
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		logger.Log.Error("Failed to decode request body: ", err.Error())
+		logrus.Error("Failed to decode request body: ", err.Error())
 		NewErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if err := h.service.Banner.UpdateBanner(id, input); err != nil {
-		logger.Log.Error("Failed to update movie: ", err.Error())
+		logrus.Error("Failed to update movie: ", err.Error())
 		NewErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -442,7 +444,7 @@ func (h *Handler) handleUpdateBanner(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		logger.Log.Error("Failed to encode response", err.Error())
+		logrus.Error("Failed to encode response", err.Error())
 	}
 
 }
@@ -461,10 +463,10 @@ func (h *Handler) handleUpdateBanner(w http.ResponseWriter, r *http.Request) {
 // @Router /banner/{id} [delete]
 func (h *Handler) handleDeleteBanner(w http.ResponseWriter, r *http.Request) {
 
-	logger.Log.Info("Handling Delete Banner by ID")
+	logrus.Info("Handling Delete Banner by ID")
 
 	if err := h.checkAdminStatus(w, r); err != nil {
-		logger.Log.Error("Admin status is not available:", err.Error())
+		logrus.Error("Admin status is not available:", err.Error())
 		NewErrorResponse(w, http.StatusForbidden, "Пользователь не имеет доступа")
 		return
 	}
@@ -473,7 +475,7 @@ func (h *Handler) handleDeleteBanner(w http.ResponseWriter, r *http.Request) {
 
 	parts := strings.Split(path, "/")
 	if len(parts) < 3 {
-		logger.Log.Info("Missing ID parameters")
+		logrus.Info("Missing ID parameters")
 		NewErrorResponse(w, http.StatusBadRequest, "missing id parameter")
 		return
 	}
@@ -481,14 +483,14 @@ func (h *Handler) handleDeleteBanner(w http.ResponseWriter, r *http.Request) {
 	bannerIDstr := parts[2]
 	id, err := strconv.Atoi(bannerIDstr)
 	if err != nil {
-		logger.Log.Error("Invalid Banner ID parameter: ", err.Error())
+		logrus.Error("Invalid Banner ID parameter: ", err.Error())
 		NewErrorResponse(w, http.StatusBadRequest, "Invalid Tag ID parameter")
 		return
 	}
 
 	err = h.service.Banner.DeleteBanner(id)
 	if err != nil {
-		logger.Log.Error("Failed to delete banner", err.Error())
+		logrus.Error("Failed to delete banner", err.Error())
 		NewErrorResponse(w, http.StatusNoContent, "Баннер не найден")
 		return
 	}
@@ -498,7 +500,7 @@ func (h *Handler) handleDeleteBanner(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		logger.Log.Error("Failed to encode response", err.Error())
+		logrus.Error("Failed to encode response", err.Error())
 	}
 
 }

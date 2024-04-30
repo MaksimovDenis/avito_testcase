@@ -24,11 +24,11 @@ build:
 
 ## Build and start the containers
 up:
-	docker-compose up --build 
+	docker compose up --build 
 
 ## Stop and remove containers
 down:
-	docker-compose down
+	docker compose down
 
 ## Restart the containers
 restart: down up

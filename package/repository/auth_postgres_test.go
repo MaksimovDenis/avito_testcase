@@ -1,8 +1,9 @@
 package repository
 
 import (
-	avito "avito_testcase"
 	"testing"
+
+	avito "github.com/MaksimovDenis/avito_testcase"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"

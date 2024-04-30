@@ -1,7 +1,7 @@
 package repository
 
 import (
-	avito "avito_testcase"
+	avito "github.com/MaksimovDenis/avito_testcase"
 
 	"github.com/jmoiron/sqlx"
 )

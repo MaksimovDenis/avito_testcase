@@ -1,8 +1,6 @@
 package repository
 
 import (
-	avito "avito_testcase"
-	logger "avito_testcase/logs"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -12,7 +10,10 @@ import (
 	"strings"
 	"time"
 
+	avito "github.com/MaksimovDenis/avito_testcase"
+
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 type BannerPostgres struct {
@@ -52,14 +53,14 @@ func (b *BannerPostgres) CreateBanner(banner avito.Banners, tagIDs []int) (int, 
 	//START TRANSACTION
 	tx, err := b.db.Begin()
 	if err != nil {
-		logger.Log.Errorf("failed to start transaction: %v", err)
+		logrus.Errorf("failed to start transaction: %v", err)
 		return 0, err
 	}
 	defer func() {
 		if err != nil {
-			logger.Log.Errorf("rolling back transaction due to error: %v", err)
+			logrus.Errorf("rolling back transaction due to error: %v", err)
 			if rbErr := tx.Rollback(); rbErr != nil {
-				logger.Log.Errorf("failed to rollback transaction: %v", rbErr)
+				logrus.Errorf("failed to rollback transaction: %v", rbErr)
 			}
 		}
 	}()
@@ -71,7 +72,7 @@ func (b *BannerPostgres) CreateBanner(banner avito.Banners, tagIDs []int) (int, 
 	query = fmt.Sprintf(`INSERT INTO %s (feature_id, title, text, url, is_active, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING banner_id`, bannersTable)
 	row = tx.QueryRow(query, banner.FeatureId, banner.Title, banner.Text, banner.URL, banner.IsActive, currentTime, currentTime)
 	if err := row.Scan(&id); err != nil {
-		logger.Log.Errorf("error occured during CreateBanner to DB (bannersTable): %v", err)
+		logrus.Errorf("error occured during CreateBanner to DB (bannersTable): %v", err)
 		return 0, err
 	}
 
@@ -79,7 +80,7 @@ func (b *BannerPostgres) CreateBanner(banner avito.Banners, tagIDs []int) (int, 
 	query = fmt.Sprintf(`INSERT INTO %s (feature_id, feature_name) VALUES ($1, $2) ON CONFLICT DO NOTHING`, featureTable)
 	_, err = tx.Exec(query, banner.FeatureId, strconv.Itoa(banner.FeatureId))
 	if err != nil {
-		logger.Log.Errorf("error occurred during CreateBanner to DB (featureTable): %v", err)
+		logrus.Errorf("error occurred during CreateBanner to DB (featureTable): %v", err)
 		return 0, err
 	}
 
@@ -87,7 +88,7 @@ func (b *BannerPostgres) CreateBanner(banner avito.Banners, tagIDs []int) (int, 
 	query = fmt.Sprintf(`INSERT INTO %s (banner_id, feature_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, bannerFeaturesTable)
 	_, err = tx.Exec(query, id, banner.FeatureId)
 	if err != nil {
-		logger.Log.Errorf("error occurred during CreateBanner to DB (bannerFeaturesTable): %v", err)
+		logrus.Errorf("error occurred during CreateBanner to DB (bannerFeaturesTable): %v", err)
 		return 0, err
 	}
 
@@ -95,20 +96,20 @@ func (b *BannerPostgres) CreateBanner(banner avito.Banners, tagIDs []int) (int, 
 	for _, tagID := range tagIDs {
 		query = fmt.Sprintf(`INSERT INTO %s (tag_id, tag_name) VALUES ($1, $2) ON CONFLICT DO NOTHING`, tagsTable)
 		if _, err := tx.Exec(query, tagID, strconv.Itoa(tagID)); err != nil {
-			logger.Log.Errorf("error occurred during CreateBanner to DB (tagsTable): %v", err)
+			logrus.Errorf("error occurred during CreateBanner to DB (tagsTable): %v", err)
 			return 0, err
 		}
 
 		query = fmt.Sprintf(`INSERT INTO %s (banner_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, bannerTagsTable)
 		if _, err := tx.Exec(query, id, tagID); err != nil {
-			logger.Log.Errorf("error occurred during CreateBanner to DB (bannerTagsTable): %v", err)
+			logrus.Errorf("error occurred during CreateBanner to DB (bannerTagsTable): %v", err)
 			return 0, err
 		}
 	}
 
 	//END TRANSACTION
 	if err := tx.Commit(); err != nil {
-		logger.Log.Errorf("failed to commit transaction: %v", err)
+		logrus.Errorf("failed to commit transaction: %v", err)
 		return 0, err
 	}
 
@@ -123,21 +124,21 @@ func (b *BannerPostgres) GetBannerByTagAndFeature(params avito.BannerQueryParams
 		//CHECK KEY EXISTENCE IN CACHE
 		exists, err := ClientRedis.Exists(ctx, key).Result()
 		if err != nil {
-			logger.Log.Error("Failed to check key existence in Redis (GetBannerByTagAndFeature)", err.Error())
+			logrus.Error("Failed to check key existence in Redis (GetBannerByTagAndFeature)", err.Error())
 			return avito.Banners{}, err
 		}
 
 		if exists > 0 {
 			value, err := ClientRedis.Get(ctx, key).Result()
 			if err != nil {
-				logger.Log.Error("Failed to get data from Redis (GetBannerByTagAndFeature)", err.Error())
+				logrus.Error("Failed to get data from Redis (GetBannerByTagAndFeature)", err.Error())
 				return avito.Banners{}, err
 			}
 
 			var banner avito.Banners
 			err = json.Unmarshal([]byte(value), &banner)
 			if err != nil {
-				logger.Log.Error("Failed to unmarshal JSON (GetBannerByTagAndFeature)", err.Error())
+				logrus.Error("Failed to unmarshal JSON (GetBannerByTagAndFeature)", err.Error())
 				return avito.Banners{}, err
 			}
 
@@ -164,19 +165,19 @@ func (b *BannerPostgres) GetBannerByTagAndFeature(params avito.BannerQueryParams
 		b.is_active=$3`, bannersTable, bannerTagsTable)
 	err := b.db.Get(&banner, query, params.TagID, params.FeatureID, isActive)
 	if err != nil {
-		logger.Log.Error("Failed to get banner by tag and feature", err.Error())
+		logrus.Error("Failed to get banner by tag and feature", err.Error())
 		return banner, err
 	}
 
 	value, err := json.Marshal(banner)
 	if err != nil {
-		logger.Log.Error("Failed to marshal JSON (GetBannerByTagAndFeature)", err.Error())
+		logrus.Error("Failed to marshal JSON (GetBannerByTagAndFeature)", err.Error())
 		return banner, err
 	}
 
 	err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
 	if err != nil {
-		logger.Log.Error("Failed to set data to redis", err.Error())
+		logrus.Error("Failed to set data to redis", err.Error())
 		return banner, err
 	}
 
@@ -191,21 +192,21 @@ func (b *BannerPostgres) GetBannerByTagAndFeatureForAdmin(params avito.BannerQue
 		//CHECK KEY EXISTENCE IN CACHE
 		exists, err := ClientRedis.Exists(ctx, key).Result()
 		if err != nil {
-			logger.Log.Error("Failed to check key existence in Redis", err.Error())
+			logrus.Error("Failed to check key existence in Redis", err.Error())
 			return avito.Banners{}, err
 		}
 
 		if exists > 0 {
 			value, err := ClientRedis.Get(ctx, key).Result()
 			if err != nil {
-				logger.Log.Error("Failed to get data from Redis", err.Error())
+				logrus.Error("Failed to get data from Redis", err.Error())
 				return avito.Banners{}, err
 			}
 
 			var banner avito.Banners
 			err = json.Unmarshal([]byte(value), &banner)
 			if err != nil {
-				logger.Log.Error("Failed to unmarshal JSON (GetBannerByTagAndFeature)", err.Error())
+				logrus.Error("Failed to unmarshal JSON (GetBannerByTagAndFeature)", err.Error())
 				return avito.Banners{}, err
 			}
 
@@ -229,19 +230,19 @@ func (b *BannerPostgres) GetBannerByTagAndFeatureForAdmin(params avito.BannerQue
 		b.feature_id=$2`, bannersTable, bannerTagsTable)
 	err := b.db.Get(&banner, query, params.TagID, params.FeatureID)
 	if err != nil {
-		logger.Log.Error("Failed to get banner by tag and feature", err.Error())
+		logrus.Error("Failed to get banner by tag and feature", err.Error())
 		return banner, err
 	}
 
 	value, err := json.Marshal(banner)
 	if err != nil {
-		logger.Log.Error("Failed to marshal JSON (GetBannerByTagAndFeature)", err.Error())
+		logrus.Error("Failed to marshal JSON (GetBannerByTagAndFeature)", err.Error())
 		return banner, err
 	}
 
 	err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
 	if err != nil {
-		logger.Log.Error("Failed to set data to redis", err.Error())
+		logrus.Error("Failed to set data to redis", err.Error())
 		return banner, err
 	}
 
@@ -255,21 +256,21 @@ func (b *BannerPostgres) GetAllBanners(params avito.BannerQueryParams) ([]avito.
 	//CHECK KEY EXISTENCE IN CACHE
 	exists, err := ClientRedis.Exists(ctx, key).Result()
 	if err != nil {
-		logger.Log.Error("Failed ot check key existence in Redis (GetAllBanners)")
+		logrus.Error("Failed ot check key existence in Redis (GetAllBanners)")
 		return []avito.AllBanners{}, err
 	}
 
 	if exists > 0 {
 		value, err := ClientRedis.Get(ctx, key).Result()
 		if err != nil {
-			logger.Log.Error("Failed to get data from Redis (GetAllBanners)", err.Error())
+			logrus.Error("Failed to get data from Redis (GetAllBanners)", err.Error())
 			return []avito.AllBanners{}, err
 		}
 
 		var banners []avito.AllBanners
 		err = json.Unmarshal([]byte(value), &banners)
 		if err != nil {
-			logger.Log.Error("Failed to unmarshal JSON (GetBannerByTagAndFeature)", err.Error())
+			logrus.Error("Failed to unmarshal JSON (GetBannerByTagAndFeature)", err.Error())
 			return []avito.AllBanners{}, err
 		}
 		return banners, nil
@@ -325,13 +326,13 @@ func (b *BannerPostgres) GetAllBanners(params avito.BannerQueryParams) ([]avito.
 
 		value, err := json.Marshal(banners)
 		if err != nil {
-			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
+			logrus.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
 			return banners, err
 		}
 
 		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
 		if err != nil {
-			logger.Log.Error("Failed to set data to redis", err.Error())
+			logrus.Error("Failed to set data to redis", err.Error())
 			return banners, err
 		}
 	} else if params.TagID != 0 && params.FeatureID == 0 {
@@ -386,13 +387,13 @@ func (b *BannerPostgres) GetAllBanners(params avito.BannerQueryParams) ([]avito.
 
 		value, err := json.Marshal(banners)
 		if err != nil {
-			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
+			logrus.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
 			return banners, err
 		}
 
 		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
 		if err != nil {
-			logger.Log.Error("Failed to set data to redis", err.Error())
+			logrus.Error("Failed to set data to redis", err.Error())
 			return banners, err
 		}
 	} else if params.FeatureID != 0 && params.TagID == 0 {
@@ -448,13 +449,13 @@ func (b *BannerPostgres) GetAllBanners(params avito.BannerQueryParams) ([]avito.
 
 		value, err := json.Marshal(banners)
 		if err != nil {
-			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
+			logrus.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
 			return banners, err
 		}
 
 		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
 		if err != nil {
-			logger.Log.Error("Failed to set data to redis", err.Error())
+			logrus.Error("Failed to set data to redis", err.Error())
 			return banners, err
 		}
 	} else if params.FeatureID == 0 && params.TagID == 0 {
@@ -500,13 +501,13 @@ func (b *BannerPostgres) GetAllBanners(params avito.BannerQueryParams) ([]avito.
 
 		value, err := json.Marshal(banners)
 		if err != nil {
-			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
+			logrus.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
 			return banners, err
 		}
 
 		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
 		if err != nil {
-			logger.Log.Error("Failed to set data to redis", err.Error())
+			logrus.Error("Failed to set data to redis", err.Error())
 			return banners, err
 		}
 	}
@@ -521,21 +522,21 @@ func (b *BannerPostgres) GetAllBannersForAdmin(params avito.BannerQueryParams) (
 	//CHECK KEY EXISTENCE IN CACHE
 	exists, err := ClientRedis.Exists(ctx, key).Result()
 	if err != nil {
-		logger.Log.Error("Failed ot check key existence in Redis (GetAllBanners)")
+		logrus.Error("Failed ot check key existence in Redis (GetAllBanners)")
 		return []avito.AllBanners{}, err
 	}
 
 	if exists > 0 {
 		value, err := ClientRedis.Get(ctx, key).Result()
 		if err != nil {
-			logger.Log.Error("Failed to get data from Redis (GetAllBanners)", err.Error())
+			logrus.Error("Failed to get data from Redis (GetAllBanners)", err.Error())
 			return []avito.AllBanners{}, err
 		}
 
 		var banners []avito.AllBanners
 		err = json.Unmarshal([]byte(value), &banners)
 		if err != nil {
-			logger.Log.Error("Failed to unmarshal JSON (GetBannerByTagAndFeature)", err.Error())
+			logrus.Error("Failed to unmarshal JSON (GetBannerByTagAndFeature)", err.Error())
 			return []avito.AllBanners{}, err
 		}
 		return banners, nil
@@ -588,13 +589,13 @@ func (b *BannerPostgres) GetAllBannersForAdmin(params avito.BannerQueryParams) (
 
 		value, err := json.Marshal(banners)
 		if err != nil {
-			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
+			logrus.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
 			return banners, err
 		}
 
 		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
 		if err != nil {
-			logger.Log.Error("Failed to set data to redis", err.Error())
+			logrus.Error("Failed to set data to redis", err.Error())
 			return banners, err
 		}
 	} else if params.TagID != 0 && params.FeatureID == 0 {
@@ -649,13 +650,13 @@ func (b *BannerPostgres) GetAllBannersForAdmin(params avito.BannerQueryParams) (
 
 		value, err := json.Marshal(banners)
 		if err != nil {
-			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
+			logrus.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
 			return banners, err
 		}
 
 		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
 		if err != nil {
-			logger.Log.Error("Failed to set data to redis", err.Error())
+			logrus.Error("Failed to set data to redis", err.Error())
 			return banners, err
 		}
 	} else if params.FeatureID != 0 && params.TagID == 0 {
@@ -709,13 +710,13 @@ func (b *BannerPostgres) GetAllBannersForAdmin(params avito.BannerQueryParams) (
 
 		value, err := json.Marshal(banners)
 		if err != nil {
-			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
+			logrus.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
 			return banners, err
 		}
 
 		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
 		if err != nil {
-			logger.Log.Error("Failed to set data to redis", err.Error())
+			logrus.Error("Failed to set data to redis", err.Error())
 			return banners, err
 		}
 	} else if params.FeatureID == 0 && params.TagID == 0 {
@@ -761,13 +762,13 @@ func (b *BannerPostgres) GetAllBannersForAdmin(params avito.BannerQueryParams) (
 
 		value, err := json.Marshal(banners)
 		if err != nil {
-			logger.Log.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
+			logrus.Error("Failed to marshal JSON (GetAllBanners)", err.Error())
 			return banners, err
 		}
 
 		err = ClientRedis.Set(ctx, key, value, time.Duration(ttlSeconds)*time.Second).Err()
 		if err != nil {
-			logger.Log.Error("Failed to set data to redis", err.Error())
+			logrus.Error("Failed to set data to redis", err.Error())
 			return banners, err
 		}
 	}
@@ -812,14 +813,14 @@ func (b *BannerPostgres) UpdateBanner(bannerID int, input avito.UpdateBanner) er
 		deleteQuery := fmt.Sprintf(`DELETE FROM %s WHERE banner_id=$1`, bannerFeaturesTable)
 		_, err := b.db.Exec(deleteQuery, bannerID)
 		if err != nil {
-			logger.Log.Errorf("Error occured during delete string from bannerFeaturesTable (UpdateBanner): %v", err)
+			logrus.Errorf("Error occured during delete string from bannerFeaturesTable (UpdateBanner): %v", err)
 			return err
 		}
 
 		insertQuery := fmt.Sprintf(`INSERT INTO %s (banner_id, feature_id) VALUES ($1, $2)`, bannerFeaturesTable)
 		_, err = b.db.Exec(insertQuery, bannerID, *input.FeatureId)
 		if err != nil {
-			logger.Log.Errorf("Error occured during insert updtated info to bannerFeaturesTable(UpdateBanner): %v", err)
+			logrus.Errorf("Error occured during insert updtated info to bannerFeaturesTable(UpdateBanner): %v", err)
 			return err
 		}
 	}
@@ -852,7 +853,7 @@ func (b *BannerPostgres) UpdateBanner(bannerID int, input avito.UpdateBanner) er
 		deleteQuery := fmt.Sprintf(`DELETE FROM %s WHERE banner_id=$1`, bannerTagsTable)
 		_, err := b.db.Exec(deleteQuery, bannerID)
 		if err != nil {
-			logger.Log.Errorf("Error occured during delete string from bannerTagsTable (UpdateBanner): %v", err)
+			logrus.Errorf("Error occured during delete string from bannerTagsTable (UpdateBanner): %v", err)
 			return err
 		}
 
@@ -860,7 +861,7 @@ func (b *BannerPostgres) UpdateBanner(bannerID int, input avito.UpdateBanner) er
 			insertQuery := fmt.Sprintf(`INSERT INTO %s (banner_id, tag_id) VALUES ($1, $2)`, bannerTagsTable)
 			_, err := b.db.Exec(insertQuery, bannerID, tagID)
 			if err != nil {
-				logger.Log.Errorf("Error occured during insert updtated info to bannerTagsTable(UpdateBanner): %v", err)
+				logrus.Errorf("Error occured during insert updtated info to bannerTagsTable(UpdateBanner): %v", err)
 				return err
 			}
 		}
@@ -875,12 +876,12 @@ func (b *BannerPostgres) UpdateBanner(bannerID int, input avito.UpdateBanner) er
 
 	args = append(args, bannerID)
 
-	logger.Log.Printf("updateQuerry: %s", query)
-	logger.Log.Printf("args :%v", args)
+	logrus.Printf("updateQuerry: %s", query)
+	logrus.Printf("args :%v", args)
 
 	_, err := b.db.Exec(query, args...)
 	if err != nil {
-		logger.Log.Errorf("failed to execute update query: %v", err)
+		logrus.Errorf("failed to execute update query: %v", err)
 		return fmt.Errorf("failed to execute update query: %v", err)
 	}
 
@@ -894,7 +895,7 @@ func (b *BannerPostgres) DeleteBanner(bannerID int) error {
 	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM %s WHERE banner_id=$1`, bannersTable)
 	err := b.db.QueryRow(countQuery, bannerID).Scan(&count)
 	if err != nil {
-		logger.Log.Errorf("Failed to query banner count: %v", err)
+		logrus.Errorf("Failed to query banner count: %v", err)
 		return err
 	}
 
@@ -905,14 +906,14 @@ func (b *BannerPostgres) DeleteBanner(bannerID int) error {
 	//START TRANSACTION
 	tx, err := b.db.Begin()
 	if err != nil {
-		logger.Log.Errorf("failed to start transaction: %v", err)
+		logrus.Errorf("failed to start transaction: %v", err)
 		return err
 	}
 	defer func() {
 		if err != nil {
-			logger.Log.Errorf("rolling back transaction due to error: %v", err)
+			logrus.Errorf("rolling back transaction due to error: %v", err)
 			if rbErr := tx.Rollback(); rbErr != nil {
-				logger.Log.Errorf("failed to rollback transaction: %v", rbErr)
+				logrus.Errorf("failed to rollback transaction: %v", rbErr)
 			}
 		}
 	}()
@@ -934,7 +935,7 @@ func (b *BannerPostgres) DeleteBanner(bannerID int) error {
 
 	//END TRANSACTION
 	if err := tx.Commit(); err != nil {
-		logger.Log.Errorf("failed to commit transaction: %v", err)
+		logrus.Errorf("failed to commit transaction: %v", err)
 		return err
 	}
 

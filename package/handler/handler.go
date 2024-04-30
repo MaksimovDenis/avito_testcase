@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"avito_testcase/package/service"
 	"net/http"
 
-	_ "avito_testcase/docs"
+	"github.com/MaksimovDenis/avito_testcase/package/service"
+
+	_ "github.com/MaksimovDenis/avito_testcase/docs"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
